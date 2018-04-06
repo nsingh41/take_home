@@ -1,0 +1,87 @@
+service: finalexam
+
+custom:
+  bucket: myfinalexam41
+
+provider:
+  name: aws
+  runtime: nodejs6.10
+  stage: dev
+  region: us-west-2
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource: "arn:aws:dynamodb:us-west-2:*:*"
+    - Effect: "Allow"
+      Action:
+        - s3:*
+      Resource: "*"
+    
+functions:
+  uploadSongs:
+    handler: songs/uploadSongs.uploadSongs
+    events:
+      - s3:
+          bucket: ${self:custom.bucket}
+          event: s3:ObjectCreated:*
+  
+  playlist:
+    handler: songs/playlist.playlist
+    events:
+      - http:
+          path: songs
+          method: post
+          cors: true
+  
+  getSongs:
+    handler: songs/getSongs.getSongs
+    events:
+      - http:
+          path: songs/{name}
+          method: get
+          cors: true
+  
+  trackList:
+    handler: songs/trackList.trackList
+    events:
+      - http:
+          path: songs
+          method: get
+          cors: true
+
+
+
+resources:
+  Resources:
+    myfinal41:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: myfinal41
+        AttributeDefinitions:
+          - AttributeName: fileName
+            AttributeType: S
+        KeySchema:
+          - AttributeName: fileName
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    myfinalexam41:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: myfinalexam41
+        AttributeDefinitions:
+          - AttributeName: fileName
+            AttributeType: S
+        KeySchema:
+          - AttributeName: fileName
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
